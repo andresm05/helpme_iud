@@ -5,9 +5,7 @@ import java.util.Optional;
 
 import org.springframework.data.domain.Pageable;
 
-import co.edu.iudigital.helpmeiud.exceptions.NoValidUsernameException;
-import co.edu.iudigital.helpmeiud.exceptions.NotEnabledUserException;
-import co.edu.iudigital.helpmeiud.exceptions.UserNotFoundException;
+import co.edu.iudigital.helpmeiud.exceptions.RestException;
 import co.edu.iudigital.helpmeiud.models.dto.request.ConsumerDtoRequest;
 import co.edu.iudigital.helpmeiud.models.dto.response.ConsumerDtoResponse;
 
@@ -17,19 +15,19 @@ public interface IConsumerService {
     ConsumerDtoResponse findByUsername(String username);
 
     //find consumer by id
-    Optional<ConsumerDtoResponse> findById(Long id) throws UserNotFoundException;
+    Optional<ConsumerDtoResponse> findById(Long id) throws RestException;
 
     //find all consumers
     List<ConsumerDtoResponse> findAll(Pageable pagin);
 
     //create consumer
-    ConsumerDtoResponse create(ConsumerDtoRequest consumerDtoRequest) throws NoValidUsernameException;
+    ConsumerDtoResponse create(ConsumerDtoRequest consumerDtoRequest) throws RestException;
 
     //update consumer
-    ConsumerDtoResponse update(Long id, ConsumerDtoRequest consumerDtoRequest) throws UserNotFoundException;
+    ConsumerDtoResponse update(Long id, ConsumerDtoRequest consumerDtoRequest) throws RestException;
 
     //delete consumer
-    void delete(Long id) throws UserNotFoundException, NotEnabledUserException;
+    void delete(Long id) throws RestException;
     
     //
 }

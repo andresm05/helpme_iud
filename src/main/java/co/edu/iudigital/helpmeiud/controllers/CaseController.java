@@ -18,8 +18,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import co.edu.iudigital.helpmeiud.exceptions.UnauthorizedException;
-import co.edu.iudigital.helpmeiud.exceptions.UserNotFoundException;
+import co.edu.iudigital.helpmeiud.exceptions.RestException;
 import co.edu.iudigital.helpmeiud.models.dto.request.CaseDtoRequest;
 import co.edu.iudigital.helpmeiud.models.dto.response.CaseDtoResponse;
 import co.edu.iudigital.helpmeiud.services.iface.ICaseService;
@@ -34,14 +33,10 @@ public class CaseController {
     private ICaseService caseService;
 
     @GetMapping
-    public ResponseEntity<?> findByConsumer() {
+    public ResponseEntity<?> findByConsumer() throws RestException {
 
-        try {
-            List<CaseDtoResponse> cases = caseService.findByConsumer();
-            return ResponseEntity.ok().body(cases);
-        } catch (UserNotFoundException e) {
-            return ResponseEntity.badRequest().body(e.getMessage());
-        }
+        List<CaseDtoResponse> cases = caseService.findByConsumer();
+        return ResponseEntity.ok().body(cases);
 
     }
 
@@ -55,16 +50,14 @@ public class CaseController {
     }
 
     @PostMapping
-    public ResponseEntity<?> create(@Valid @RequestBody CaseDtoRequest caseDtoRequest, BindingResult result) {
+    public ResponseEntity<?> create(@Valid @RequestBody CaseDtoRequest caseDtoRequest, BindingResult result)
+            throws RestException {
         if (result.hasErrors()) {
             return IControllerMethods.validateRequest(result);
         }
-        CaseDtoResponse caseDtoResponse;
-        try {
-            caseDtoResponse = caseService.create(caseDtoRequest);
-        } catch (Exception e) {
-            return ResponseEntity.badRequest().body(e.getMessage());
-        }
+
+        CaseDtoResponse caseDtoResponse = caseService.create(caseDtoRequest);
+
         if (caseDtoResponse == null) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build(); // response 500
         }
@@ -73,20 +66,15 @@ public class CaseController {
 
     @PutMapping("/{id}")
     public ResponseEntity<?> update(@Valid @PathVariable Long id,
-            @RequestBody CaseDtoRequest caseDtoRequest, BindingResult result) {
+            @RequestBody CaseDtoRequest caseDtoRequest, BindingResult result) 
+            throws RestException {
         if (result.hasErrors()) {
             return IControllerMethods.validateRequest(result);
         }
         CaseDtoResponse caseDtoResponse;
-        try {
+
             caseDtoResponse = caseService.update(id, caseDtoRequest);
-        } catch (UnauthorizedException e) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                    .body(e.getMessage());
-        } // response 401
-        catch (Exception e) {
-            return ResponseEntity.badRequest().body(e.getMessage());
-        }
+
         if (caseDtoResponse == null) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build(); // response 500
         }
@@ -94,12 +82,11 @@ public class CaseController {
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<?> delete(@PathVariable Long id) {
-        try {
+    public ResponseEntity<?> delete(@PathVariable Long id) 
+    throws RestException {
+
             caseService.delete(id);
-        } catch (Exception e) {
-            return ResponseEntity.badRequest().body(e.getMessage());
-        }
+
         return ResponseEntity.ok().build();
     }
 

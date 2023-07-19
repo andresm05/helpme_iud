@@ -12,9 +12,10 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import co.edu.iudigital.helpmeiud.exceptions.EntityNotFoundException;
 import co.edu.iudigital.helpmeiud.exceptions.NoValidUsernameException;
 import co.edu.iudigital.helpmeiud.exceptions.NotEnabledUserException;
-import co.edu.iudigital.helpmeiud.exceptions.UserNotFoundException;
+import co.edu.iudigital.helpmeiud.exceptions.RestException;
 import co.edu.iudigital.helpmeiud.models.dto.request.ConsumerDtoRequest;
 import co.edu.iudigital.helpmeiud.models.dto.request.mapper.ConsumerRequestMapper;
 import co.edu.iudigital.helpmeiud.models.dto.response.ConsumerDtoResponse;
@@ -55,10 +56,10 @@ public class ConsumerServiceImpl implements IConsumerService {
 
     @Override
     @Transactional(readOnly = true)
-    public Optional<ConsumerDtoResponse> findById(Long id) throws UserNotFoundException {
+    public Optional<ConsumerDtoResponse> findById(Long id) throws RestException {
         Optional<Consumer> consumerFound = consumerRepository.findById(id);
         if(!consumerFound.isPresent()){
-            throw new UserNotFoundException("user not found");
+            throw new EntityNotFoundException("User","user not found");
         }
         return consumerFound
                 .map(consumer -> ConsumerDtoResponseMapper.builder()
@@ -77,7 +78,8 @@ public class ConsumerServiceImpl implements IConsumerService {
 
     @Override
     @Transactional
-    public ConsumerDtoResponse create(ConsumerDtoRequest consumerDtoRequest) throws NoValidUsernameException {
+    public ConsumerDtoResponse create(ConsumerDtoRequest consumerDtoRequest) 
+    throws RestException {
 
         Consumer existConsumer = consumerRepository.findByUsername(consumerDtoRequest.getUsername());
         if (existConsumer != null) {
@@ -103,11 +105,12 @@ public class ConsumerServiceImpl implements IConsumerService {
 
     @Override
     @Transactional
-    public ConsumerDtoResponse update(Long id, ConsumerDtoRequest consumerDtoRequest) throws UserNotFoundException {
+    public ConsumerDtoResponse update(Long id, ConsumerDtoRequest consumerDtoRequest) 
+    throws RestException {
         Optional<Consumer> consumer = consumerRepository.findById(id);
         Consumer consumerOptional = null;
         if (!consumer.isPresent()) {
-            throw new UserNotFoundException("user not found");
+            throw new EntityNotFoundException("User","user not found");
         }
         Consumer consumerFound = consumer.orElseThrow(() -> new RuntimeException("Consumer not found"));
         consumerFound.setName(consumerDtoRequest.getName());
@@ -125,8 +128,7 @@ public class ConsumerServiceImpl implements IConsumerService {
 
     @Override
     @Transactional
-    public void delete(Long id) throws UserNotFoundException, 
-    NotEnabledUserException {
+    public void delete(Long id) throws RestException {
         Consumer consumer = consumerRepository.findById(id).orElse(null);
         if (consumer != null) {
             if(!consumer.getEnabled()){
@@ -135,7 +137,7 @@ public class ConsumerServiceImpl implements IConsumerService {
             consumer.setEnabled(false);
             consumerRepository.save(consumer);
         } else {
-            throw new UserNotFoundException("user not found");
+            throw new EntityNotFoundException("User","user not found");
         }
     }
 

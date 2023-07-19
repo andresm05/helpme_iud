@@ -19,9 +19,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import co.edu.iudigital.helpmeiud.exceptions.NoValidUsernameException;
-import co.edu.iudigital.helpmeiud.exceptions.NotEnabledUserException;
-import co.edu.iudigital.helpmeiud.exceptions.UserNotFoundException;
+import co.edu.iudigital.helpmeiud.exceptions.RestException;
 import co.edu.iudigital.helpmeiud.models.dto.request.ConsumerDtoRequest;
 import co.edu.iudigital.helpmeiud.models.dto.response.ConsumerDtoResponse;
 import co.edu.iudigital.helpmeiud.services.iface.IConsumerService;
@@ -40,7 +38,7 @@ public class ConsumerController {
             @RequestParam(defaultValue = "0") Integer page,
             @RequestParam(defaultValue = "3") Integer size) {
 
-        //this is for pagination
+        // this is for pagination
         Pageable pagin = PageRequest.of(page, size);
 
         List<ConsumerDtoResponse> consumersDtoResponse = consumerService.findAll(pagin);
@@ -49,14 +47,11 @@ public class ConsumerController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<?> getOne(@PathVariable Long id) {
+    public ResponseEntity<?> getOne(@PathVariable Long id) throws RestException {
         ConsumerDtoResponse consumerDtoResponse = null;
-        try {
-            Optional<ConsumerDtoResponse> consumer = consumerService.findById(id);
-            consumerDtoResponse = consumer.get();
-        } catch (UserNotFoundException e) {
-            return ResponseEntity.badRequest().body(e.getMessage());
-        }
+
+        Optional<ConsumerDtoResponse> consumer = consumerService.findById(id);
+        consumerDtoResponse = consumer.get();
 
         if (consumerDtoResponse == null) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build(); // response 500
@@ -66,19 +61,17 @@ public class ConsumerController {
     }
 
     @PostMapping
-    public ResponseEntity<?> create(@Valid @RequestBody ConsumerDtoRequest consumerDtoRequest, BindingResult result) {
+    public ResponseEntity<?> create(@Valid @RequestBody ConsumerDtoRequest consumerDtoRequest,
+            BindingResult result) throws RestException {
 
         if (result.hasErrors()) {
             return IControllerMethods.validateRequest(result);
         }
 
         ConsumerDtoResponse consumerDtoRequestCreated;
-        try {
-            consumerDtoRequestCreated = consumerService
-                    .create(consumerDtoRequest);
-        } catch (NoValidUsernameException e) {
-            return ResponseEntity.badRequest().body(e.getMessage());
-        }
+
+        consumerDtoRequestCreated = consumerService
+                .create(consumerDtoRequest);
 
         if (consumerDtoRequestCreated == null) {
             return ResponseEntity.badRequest().build();
@@ -90,17 +83,11 @@ public class ConsumerController {
     @PutMapping("/{id}")
     public ResponseEntity<?> update(@Valid @PathVariable Long id,
             @RequestBody ConsumerDtoRequest consumerDtoRequest,
-            BindingResult result) {
+            BindingResult result) throws RestException {
         if (result.hasErrors()) {
             return IControllerMethods.validateRequest(result);
         }
-        ConsumerDtoResponse consumerDtoResponse;
-        try {
-            consumerDtoResponse = consumerService.update(id, consumerDtoRequest);
-
-        } catch (UserNotFoundException e) {
-            return ResponseEntity.badRequest().body(e.getMessage());
-        }
+        ConsumerDtoResponse consumerDtoResponse = consumerService.update(id, consumerDtoRequest);
 
         if (consumerDtoResponse == null) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build(); // response 500
@@ -111,15 +98,11 @@ public class ConsumerController {
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<?> delete(@PathVariable Long id) {
-        try {
-            consumerService.delete(id);
-        } catch (UserNotFoundException e) {
-            return ResponseEntity.badRequest().body(e.getMessage());
-        } catch (NotEnabledUserException e) {
-            // return status 200
-            return ResponseEntity.ok().body(e.getMessage());
-        }
+    public ResponseEntity<?> delete(@PathVariable Long id)
+            throws RestException {
+
+        consumerService.delete(id);
+
         // return status 204
         return ResponseEntity.noContent().build();
     }

@@ -10,10 +10,10 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import co.edu.iudigital.helpmeiud.exceptions.CaseNotFoundException;
-import co.edu.iudigital.helpmeiud.exceptions.CrimeNotFoundException;
+import co.edu.iudigital.helpmeiud.exceptions.EntityNotFoundException;
+import co.edu.iudigital.helpmeiud.exceptions.NotEnabledUserException;
+import co.edu.iudigital.helpmeiud.exceptions.RestException;
 import co.edu.iudigital.helpmeiud.exceptions.UnauthorizedException;
-import co.edu.iudigital.helpmeiud.exceptions.UserNotFoundException;
 import co.edu.iudigital.helpmeiud.models.dto.request.CaseDtoRequest;
 import co.edu.iudigital.helpmeiud.models.dto.request.mapper.CaseRequestMapper;
 import co.edu.iudigital.helpmeiud.models.dto.response.CaseDtoResponse;
@@ -44,8 +44,7 @@ public class CaseServiceImpl implements ICaseService {
     @Transactional(readOnly = true)
     public List<CaseDtoResponse> findAll(Pageable pageable) {
         Page<Case> cases = caseRepository.findAll(pageable);
-        return cases.getContent().stream().map(c -> 
-        CaseDtoResponseMapper.builder().setCase(c).build())
+        return cases.getContent().stream().map(c -> CaseDtoResponseMapper.builder().setCase(c).build())
                 .collect(Collectors.toList());
 
     }
@@ -53,7 +52,7 @@ public class CaseServiceImpl implements ICaseService {
     @Override
     @Transactional
     public CaseDtoResponse create(CaseDtoRequest caseDtoRequest)
-            throws UserNotFoundException, CrimeNotFoundException {
+            throws RestException {
         Case caseEntity = CaseRequestMapper.builder().setCaseDtoRequest(caseDtoRequest)
                 .doToEntity();
 
@@ -65,13 +64,15 @@ public class CaseServiceImpl implements ICaseService {
         Consumer userCase = consumerRepository.findByUsername(username);
 
         if (userCase == null) {
-            throw new UserNotFoundException("Debe validar el token");
+            throw new EntityNotFoundException("User",
+                    "Debe validar el token");
         }
 
         Optional<Crime> crimeCase = crimeRepository.findById(caseDtoRequest.getCrimeId());
 
         if (!crimeCase.isPresent()) {
-            throw new CrimeNotFoundException("Crime not found");
+            throw new EntityNotFoundException(Crime.class.getSimpleName(),
+                    "Crime not found");
         }
 
         caseEntity.setConsumer(userCase);
@@ -84,7 +85,7 @@ public class CaseServiceImpl implements ICaseService {
     }
 
     @Override
-    public List<CaseDtoResponse> findByConsumer() throws UserNotFoundException {
+    public List<CaseDtoResponse> findByConsumer() throws RestException {
 
         String token = TokenSetUp.token;
 
@@ -93,7 +94,7 @@ public class CaseServiceImpl implements ICaseService {
         Consumer consumer = consumerRepository.findByUsername(username);
 
         if (consumer == null) {
-            throw new UserNotFoundException("User not found");
+            throw new EntityNotFoundException("User", "User not found");
         }
 
         List<Case> cases = caseRepository.findByConsumer(consumer);
@@ -106,11 +107,11 @@ public class CaseServiceImpl implements ICaseService {
     @Override
     @Transactional
     public CaseDtoResponse update(Long id, CaseDtoRequest caseDtoRequest)
-            throws CaseNotFoundException, CrimeNotFoundException, UnauthorizedException {
+            throws RestException {
         Optional<Case> caseEntity = caseRepository.findById(id);
         Case caseOptional = null;
         if (!caseEntity.isPresent()) {
-            throw new CaseNotFoundException("Case not found");
+            throw new EntityNotFoundException(Case.class.getSimpleName(), "not found");
         }
         String token = TokenSetUp.token;
 
@@ -118,13 +119,13 @@ public class CaseServiceImpl implements ICaseService {
         String username = claims.getSubject();
         Consumer consumer = consumerRepository.findByUsername(username);
 
-        if(consumer.getId() != caseEntity.get().getConsumer().getId()) {
+        if (consumer.getId() != caseEntity.get().getConsumer().getId()) {
             throw new UnauthorizedException(username + " is not authorized to update this case");
         }
 
         Optional<Crime> crimeCase = crimeRepository.findById(caseDtoRequest.getCrimeId());
         if (!crimeCase.isPresent()) {
-            throw new CrimeNotFoundException("Crime not found");
+            throw new EntityNotFoundException(Crime.class.getSimpleName(), "not found");
         }
         Case caseFound = caseEntity.orElseThrow();
         caseFound.setLatitude(caseDtoRequest.getLatitude());
@@ -147,11 +148,12 @@ public class CaseServiceImpl implements ICaseService {
 
     @Override
     @Transactional
-    public void delete(Long id) throws CaseNotFoundException {
+    public void delete(Long id) throws RestException {
 
         Optional<Case> caseEntity = caseRepository.findById(id);
         if (!caseEntity.isPresent()) {
-            throw new CaseNotFoundException("Case not found");
+            throw new EntityNotFoundException(Case.class.getSimpleName(),
+                    "not found");
         }
         caseRepository.deleteById(id);
     }

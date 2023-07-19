@@ -17,7 +17,7 @@ import co.edu.iudigital.helpmeiud.models.entities.Consumer;
 import co.edu.iudigital.helpmeiud.repositories.IConsumerRepository;
 
 @Service
-public class JpaUserDetailsService implements UserDetailsService{
+public class JpaUserDetailsService implements UserDetailsService {
 
     @Autowired
     private IConsumerRepository consumerRepository;
@@ -28,22 +28,20 @@ public class JpaUserDetailsService implements UserDetailsService{
 
         Consumer user = consumerRepository.findByUsername(username);
 
-        if(user == null){
+        if (user == null || !user.getEnabled()) {
             throw new UsernameNotFoundException(String.format("User %s not found", username));
         }
-
         List<GrantedAuthority> authorities = user.getRoles().stream()
-        .map(r -> new SimpleGrantedAuthority(r.getName()))
-        .collect(Collectors.toList());
+                .map(r -> new SimpleGrantedAuthority(r.getName()))
+                .collect(Collectors.toList());
 
         return new User(user.getUsername(),
-        user.getPassword(), 
-        true, 
-        true, 
-        true, 
-        true, 
-        authorities);
+                user.getPassword(),
+                true,
+                true,
+                true,
+                true,
+                authorities);
     }
-    
-    
+
 }

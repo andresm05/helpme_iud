@@ -8,8 +8,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import co.edu.iudigital.helpmeiud.exceptions.CrimeNotFoundException;
 import co.edu.iudigital.helpmeiud.exceptions.NoValidUsernameException;
+import co.edu.iudigital.helpmeiud.exceptions.RestException;
 import co.edu.iudigital.helpmeiud.models.dto.request.CrimeDtoRequest;
 import co.edu.iudigital.helpmeiud.models.dto.request.mapper.CrimeRequestMapper;
 import co.edu.iudigital.helpmeiud.models.dto.response.CrimeDtoResponse;
@@ -19,6 +19,7 @@ import co.edu.iudigital.helpmeiud.models.entities.Crime;
 import co.edu.iudigital.helpmeiud.repositories.IConsumerRepository;
 import co.edu.iudigital.helpmeiud.repositories.ICrimeRepository;
 import co.edu.iudigital.helpmeiud.services.iface.ICrimeService;
+import co.edu.iudigital.helpmeiud.exceptions.EntityNotFoundException;
 
 @Service
 public class CrimeServiceImpl implements ICrimeService {
@@ -37,7 +38,7 @@ public class CrimeServiceImpl implements ICrimeService {
 
     @Override
     @Transactional
-    public CrimeDtoResponse create(CrimeDtoRequest crimeDtoRequest) throws NoValidUsernameException {
+    public CrimeDtoResponse create(CrimeDtoRequest crimeDtoRequest) throws RestException {
         Crime crime = CrimeRequestMapper.builder()
                 .setCrimeDtoRequest(crimeDtoRequest)
                 .dtoToEntity();
@@ -59,14 +60,15 @@ public class CrimeServiceImpl implements ICrimeService {
     }
 
     @Override
-    public CrimeDtoResponse findById(Long id) throws CrimeNotFoundException {
+    public CrimeDtoResponse findById(Long id) throws EntityNotFoundException {
         Optional<Crime> crime = crimeRepository.findById(id);
         if (crime.isPresent()) {
             return CrimeDtoResponseMapper.builder()
                     .setCrime(crime.get())
                     .build();
         }
-        throw new CrimeNotFoundException("crime not found");
+        throw new EntityNotFoundException(Crime.class.getSimpleName(),
+        "crime not found");
     }
 
     @Override
@@ -81,11 +83,12 @@ public class CrimeServiceImpl implements ICrimeService {
 
     @Override
     @Transactional
-    public CrimeDtoResponse update(Long id, CrimeDtoRequest crimeDtoRequest) throws CrimeNotFoundException,
+    public CrimeDtoResponse update(Long id, CrimeDtoRequest crimeDtoRequest) throws EntityNotFoundException,
             NoValidUsernameException {
         Optional<Crime> crime = crimeRepository.findById(id);
         if (!crime.isPresent()) {
-            throw new CrimeNotFoundException("crmie not found");
+            throw new EntityNotFoundException(Crime.class.getSimpleName(),
+            "crime not found");
         }
         Optional<Consumer> consumerCrime = consumerRepository.findById(crimeDtoRequest.getUserId());
 
@@ -105,13 +108,14 @@ public class CrimeServiceImpl implements ICrimeService {
 
     @Override
     @Transactional
-    public void delete(Long id) throws CrimeNotFoundException {
+    public void delete(Long id) throws EntityNotFoundException {
         Optional<Crime> crime = crimeRepository.findById(id);
         if (crime.isPresent()) {
             Crime crimeToDelete = crime.get();
             crimeRepository.deleteById(crimeToDelete.getId());
         } else {
-            throw new CrimeNotFoundException("Crime not found");
+            throw new EntityNotFoundException(Crime.class.getSimpleName(),
+            "Crime not found");
         }
     }
 

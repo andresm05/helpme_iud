@@ -16,7 +16,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
-import co.edu.iudigital.helpmeiud.exceptions.NoValidUsernameException;
+import co.edu.iudigital.helpmeiud.exceptions.RestException;
 import co.edu.iudigital.helpmeiud.models.dto.request.CrimeDtoRequest;
 import co.edu.iudigital.helpmeiud.models.dto.response.CrimeDtoResponse;
 import co.edu.iudigital.helpmeiud.services.iface.ICrimeService;
@@ -39,18 +39,13 @@ public class CrimeController {
     @PostMapping
     public ResponseEntity<?> create(
             @Valid @RequestBody CrimeDtoRequest crimeDtoRequest,
-            BindingResult result) {
+            BindingResult result) throws RestException {
         if (result.hasErrors()) {
             return IControllerMethods.validateRequest(result);
         }
 
         CrimeDtoResponse crimeDtoResponse = null;
-        try {
-            crimeDtoResponse = crimeService.create(crimeDtoRequest);
-
-        } catch (NoValidUsernameException e) {
-            return ResponseEntity.badRequest().body(e.getMessage()); // response 400
-        }
+        crimeDtoResponse = crimeService.create(crimeDtoRequest);
         if (crimeDtoResponse != null) {
             return ResponseEntity
                     .status(HttpStatus.CREATED)
@@ -60,15 +55,10 @@ public class CrimeController {
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build(); // response 500
     }
 
-
     @GetMapping("/{id}")
-    public ResponseEntity<?> findById(@PathVariable Long id) {
+    public ResponseEntity<?> findById(@PathVariable Long id) throws RestException {
         CrimeDtoResponse crimeDtoResponse = null;
-        try {
-            crimeDtoResponse = crimeService.findById(id);
-        } catch (Exception e) {
-            return ResponseEntity.badRequest().body(e.getMessage()); // response 400
-        }
+        crimeDtoResponse = crimeService.findById(id);
         if (crimeDtoResponse != null) {
             return ResponseEntity.ok().body(crimeDtoResponse); // response 200
         }
@@ -77,20 +67,17 @@ public class CrimeController {
 
     @PutMapping("/{id}")
     public ResponseEntity<?> update(
-            @Valid  @PathVariable Long id, 
+            @Valid @PathVariable Long id,
             @RequestBody CrimeDtoRequest crimeDtoRequest,
-            BindingResult result
-            ) {
+            BindingResult result) throws RestException {
         if (result.hasErrors()) {
             return IControllerMethods.validateRequest(result);
         }
 
         CrimeDtoResponse crimeDtoResponse = null;
-        try {
-            crimeDtoResponse = crimeService.update(id, crimeDtoRequest);
-        } catch (Exception e) {
-            return ResponseEntity.badRequest().body(e.getMessage()); // response 400
-        }
+
+        crimeDtoResponse = crimeService.update(id, crimeDtoRequest);
+
         if (crimeDtoResponse != null) {
             return ResponseEntity.ok().body(crimeDtoResponse); // response 200
         }
@@ -99,12 +86,10 @@ public class CrimeController {
 
     @ResponseStatus(HttpStatus.NO_CONTENT)
     @DeleteMapping("/{id}")
-    public ResponseEntity<?> delete(@PathVariable Long id) {
-        try {
-            crimeService.delete(id);
-        } catch (Exception e) {
-            return ResponseEntity.badRequest().body(e.getMessage()); // response 400
-        }
+    public ResponseEntity<?> delete(@PathVariable Long id)
+            throws RestException {
+        crimeService.delete(id);
+
         return ResponseEntity.noContent().build(); // response 204
     }
 }
