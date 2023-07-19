@@ -11,7 +11,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import co.edu.iudigital.helpmeiud.exceptions.EntityNotFoundException;
-import co.edu.iudigital.helpmeiud.exceptions.NotEnabledUserException;
 import co.edu.iudigital.helpmeiud.exceptions.RestException;
 import co.edu.iudigital.helpmeiud.exceptions.UnauthorizedException;
 import co.edu.iudigital.helpmeiud.models.dto.request.CaseDtoRequest;
