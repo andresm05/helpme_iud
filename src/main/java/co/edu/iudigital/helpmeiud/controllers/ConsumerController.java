@@ -24,6 +24,7 @@ import co.edu.iudigital.helpmeiud.models.dto.request.ConsumerDtoRequest;
 import co.edu.iudigital.helpmeiud.models.dto.response.ConsumerDtoResponse;
 import co.edu.iudigital.helpmeiud.services.iface.IConsumerService;
 import co.edu.iudigital.helpmeiud.utils.IControllerMethods;
+import jakarta.mail.MessagingException;
 import jakarta.validation.Valid;
 
 @RestController
@@ -62,7 +63,7 @@ public class ConsumerController {
 
     @PostMapping
     public ResponseEntity<?> create(@Valid @RequestBody ConsumerDtoRequest consumerDtoRequest,
-            BindingResult result) throws RestException {
+            BindingResult result) throws RestException, MessagingException {
 
         if (result.hasErrors()) {
             return IControllerMethods.validateRequest(result);

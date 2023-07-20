@@ -21,10 +21,13 @@ import co.edu.iudigital.helpmeiud.models.dto.request.mapper.ConsumerRequestMappe
 import co.edu.iudigital.helpmeiud.models.dto.response.ConsumerDtoResponse;
 import co.edu.iudigital.helpmeiud.models.dto.response.mapper.ConsumerDtoResponseMapper;
 import co.edu.iudigital.helpmeiud.models.entities.Consumer;
+import co.edu.iudigital.helpmeiud.models.entities.EmailDetails;
 import co.edu.iudigital.helpmeiud.models.entities.Role;
 import co.edu.iudigital.helpmeiud.repositories.IConsumerRepository;
 import co.edu.iudigital.helpmeiud.repositories.IRoleRepository;
 import co.edu.iudigital.helpmeiud.services.iface.IConsumerService;
+import co.edu.iudigital.helpmeiud.services.iface.IEmailService;
+import jakarta.mail.MessagingException;
 
 @Service
 public class ConsumerServiceImpl implements IConsumerService {
@@ -37,6 +40,9 @@ public class ConsumerServiceImpl implements IConsumerService {
 
     @Autowired
     private IRoleRepository roleRepository;
+
+    @Autowired
+    private IEmailService emailService;
 
     // optional
     public ConsumerServiceImpl(IConsumerRepository consumerRepository,
@@ -79,7 +85,7 @@ public class ConsumerServiceImpl implements IConsumerService {
     @Override
     @Transactional
     public ConsumerDtoResponse create(ConsumerDtoRequest consumerDtoRequest) 
-    throws RestException {
+    throws RestException, MessagingException {
 
         Consumer existConsumer = consumerRepository.findByUsername(consumerDtoRequest.getUsername());
         if (existConsumer != null) {
@@ -97,6 +103,15 @@ public class ConsumerServiceImpl implements IConsumerService {
         }
         consumer.setRoles(roles);
         consumerRepository.save(consumer);
+
+        EmailDetails emailDetails = new EmailDetails(
+                consumer.getUsername(),
+                "Bienvenido a HelpMeIUD",
+                "Registro exitoso",
+                null
+        );
+
+        emailService.sendSimpleMail(emailDetails);
 
         return ConsumerDtoResponseMapper.builder()
                 .setConsumer(consumer)

@@ -8,6 +8,7 @@ import org.springframework.data.domain.Pageable;
 import co.edu.iudigital.helpmeiud.exceptions.RestException;
 import co.edu.iudigital.helpmeiud.models.dto.request.ConsumerDtoRequest;
 import co.edu.iudigital.helpmeiud.models.dto.response.ConsumerDtoResponse;
+import jakarta.mail.MessagingException;
 
 public interface IConsumerService {
 
@@ -21,7 +22,7 @@ public interface IConsumerService {
     List<ConsumerDtoResponse> findAll(Pageable pagin);
 
     //create consumer
-    ConsumerDtoResponse create(ConsumerDtoRequest consumerDtoRequest) throws RestException;
+    ConsumerDtoResponse create(ConsumerDtoRequest consumerDtoRequest) throws RestException, MessagingException;
 
     //update consumer
     ConsumerDtoResponse update(Long id, ConsumerDtoRequest consumerDtoRequest) throws RestException;
