@@ -8,9 +8,12 @@ import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 
 public class TokenSetUp {
+
+    
     public static String token;
 
     public static String generateToken(Claims claims, String username) {
+
         String newToken = Jwts.builder()
                 .setClaims(claims)
                 .setSubject(username)

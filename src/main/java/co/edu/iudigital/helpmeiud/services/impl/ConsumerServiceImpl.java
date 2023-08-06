@@ -2,7 +2,9 @@ package co.edu.iudigital.helpmeiud.services.impl;
 
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
@@ -163,7 +165,9 @@ public class ConsumerServiceImpl implements IConsumerService {
     }
 
     @Override
-    public String renewToken(String token) throws UnauthorizedException {
+    public Map<String, Object> renewToken(String token) throws UnauthorizedException {
+
+        Map<String, Object> body = new HashMap<>();
 
         token = token.replace("Bearer ", "");
         System.out.println("token: " + token);
@@ -174,7 +178,22 @@ public class ConsumerServiceImpl implements IConsumerService {
         }
         Claims claims = TokenSetUp.getClaims(token);
         String renew = TokenSetUp.generateToken(claims, claims.getSubject());
-        return renew;
+
+        body.put("token", renew);
+        return body;
+    }
+
+    @Override
+    public ConsumerDtoResponse getConsumerInfo(String token) throws RestException {
+        token = token.replace("Bearer ", "");
+        Claims claims = TokenSetUp.getClaims(token);
+        Consumer consumer = consumerRepository.findByUsername(claims.getSubject());
+        if (consumer == null) {
+            throw new EntityNotFoundException("User", "user not found");
+        }
+        return ConsumerDtoResponseMapper.builder()
+                .setConsumer(consumer)
+                .build();
     }
 
 }

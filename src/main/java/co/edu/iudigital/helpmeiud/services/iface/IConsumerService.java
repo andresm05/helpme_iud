@@ -1,6 +1,7 @@
 package co.edu.iudigital.helpmeiud.services.iface;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 import org.springframework.data.domain.Pageable;
@@ -30,7 +31,8 @@ public interface IConsumerService {
     //delete consumer
     void delete(Long id) throws RestException;
 
-    String renewToken(String token) throws RestException;
+    Map<String, Object> renewToken(String token) throws RestException;
     
-    //
+    //get username info
+    ConsumerDtoResponse getConsumerInfo(String token) throws RestException;
 }

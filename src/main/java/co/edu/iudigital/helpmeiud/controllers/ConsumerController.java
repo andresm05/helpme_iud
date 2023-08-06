@@ -1,6 +1,7 @@
 package co.edu.iudigital.helpmeiud.controllers;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -117,8 +118,17 @@ public class ConsumerController {
 @GetMapping("/renew")
 //renew token
 public ResponseEntity<?> renewToken(@RequestHeader("Authorization") String token) throws RestException {
-    String renew = consumerService.renewToken(token);
-    return ResponseEntity.ok().body(renew);
+    Map<String, Object> response = consumerService.renewToken(token);
+    ConsumerDtoResponse consumerDtoResponse = consumerService.getConsumerInfo(token);
+    response.put("user", consumerDtoResponse);
+    return ResponseEntity.ok().body(response);
 }
 
+@GetMapping("/info")
+//get username info
+public ResponseEntity<?> getConsumerInfo(@RequestHeader("Authorization") String token) throws RestException {
+    ConsumerDtoResponse consumerDtoResponse = consumerService.getConsumerInfo(token);
+    return ResponseEntity.ok().body(consumerDtoResponse);
+
+}
 }
