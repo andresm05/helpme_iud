@@ -1,6 +1,7 @@
 package co.edu.iudigital.helpmeiud.services.impl;
 
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -12,10 +13,14 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.auth0.jwt.JWT;
+import com.auth0.jwt.interfaces.DecodedJWT;
+
 import co.edu.iudigital.helpmeiud.exceptions.EntityNotFoundException;
 import co.edu.iudigital.helpmeiud.exceptions.NoValidUsernameException;
 import co.edu.iudigital.helpmeiud.exceptions.NotEnabledUserException;
 import co.edu.iudigital.helpmeiud.exceptions.RestException;
+import co.edu.iudigital.helpmeiud.exceptions.UnauthorizedException;
 import co.edu.iudigital.helpmeiud.models.dto.request.ConsumerDtoRequest;
 import co.edu.iudigital.helpmeiud.models.dto.request.mapper.ConsumerRequestMapper;
 import co.edu.iudigital.helpmeiud.models.dto.response.ConsumerDtoResponse;
@@ -27,6 +32,8 @@ import co.edu.iudigital.helpmeiud.repositories.IConsumerRepository;
 import co.edu.iudigital.helpmeiud.repositories.IRoleRepository;
 import co.edu.iudigital.helpmeiud.services.iface.IConsumerService;
 import co.edu.iudigital.helpmeiud.services.iface.IEmailService;
+import co.edu.iudigital.helpmeiud.utils.TokenSetUp;
+import io.jsonwebtoken.Claims;
 import jakarta.mail.MessagingException;
 
 @Service
@@ -64,8 +71,8 @@ public class ConsumerServiceImpl implements IConsumerService {
     @Transactional(readOnly = true)
     public Optional<ConsumerDtoResponse> findById(Long id) throws RestException {
         Optional<Consumer> consumerFound = consumerRepository.findById(id);
-        if(!consumerFound.isPresent()){
-            throw new EntityNotFoundException("User","user not found");
+        if (!consumerFound.isPresent()) {
+            throw new EntityNotFoundException("User", "user not found");
         }
         return consumerFound
                 .map(consumer -> ConsumerDtoResponseMapper.builder()
@@ -84,8 +91,8 @@ public class ConsumerServiceImpl implements IConsumerService {
 
     @Override
     @Transactional
-    public ConsumerDtoResponse create(ConsumerDtoRequest consumerDtoRequest) 
-    throws RestException, MessagingException {
+    public ConsumerDtoResponse create(ConsumerDtoRequest consumerDtoRequest)
+            throws RestException, MessagingException {
 
         Consumer existConsumer = consumerRepository.findByUsername(consumerDtoRequest.getUsername());
         if (existConsumer != null) {
@@ -108,8 +115,7 @@ public class ConsumerServiceImpl implements IConsumerService {
                 consumer.getUsername(),
                 "Bienvenido a HelpMeIUD",
                 "Registro exitoso",
-                null
-        );
+                null);
 
         emailService.sendSimpleMail(emailDetails);
 
@@ -120,12 +126,12 @@ public class ConsumerServiceImpl implements IConsumerService {
 
     @Override
     @Transactional
-    public ConsumerDtoResponse update(Long id, ConsumerDtoRequest consumerDtoRequest) 
-    throws RestException {
+    public ConsumerDtoResponse update(Long id, ConsumerDtoRequest consumerDtoRequest)
+            throws RestException {
         Optional<Consumer> consumer = consumerRepository.findById(id);
         Consumer consumerOptional = null;
         if (!consumer.isPresent()) {
-            throw new EntityNotFoundException("User","user not found");
+            throw new EntityNotFoundException("User", "user not found");
         }
         Consumer consumerFound = consumer.orElseThrow(() -> new RuntimeException("Consumer not found"));
         consumerFound.setName(consumerDtoRequest.getName());
@@ -146,14 +152,29 @@ public class ConsumerServiceImpl implements IConsumerService {
     public void delete(Long id) throws RestException {
         Consumer consumer = consumerRepository.findById(id).orElse(null);
         if (consumer != null) {
-            if(!consumer.getEnabled()){
+            if (!consumer.getEnabled()) {
                 throw new NotEnabledUserException("user not enabled");
             }
             consumer.setEnabled(false);
             consumerRepository.save(consumer);
         } else {
-            throw new EntityNotFoundException("User","user not found");
+            throw new EntityNotFoundException("User", "user not found");
         }
+    }
+
+    @Override
+    public String renewToken(String token) throws UnauthorizedException {
+
+        token = token.replace("Bearer ", "");
+        System.out.println("token: " + token);
+
+        DecodedJWT jwt = JWT.decode(token);
+        if (jwt.getExpiresAt().before(new Date())) {
+            throw new UnauthorizedException("token expired");
+        }
+        Claims claims = TokenSetUp.getClaims(token);
+        String renew = TokenSetUp.generateToken(claims, claims.getSubject());
+        return renew;
     }
 
 }

@@ -29,6 +29,8 @@ public interface IConsumerService {
 
     //delete consumer
     void delete(Long id) throws RestException;
+
+    String renewToken(String token) throws RestException;
     
     //
 }

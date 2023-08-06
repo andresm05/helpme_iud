@@ -16,7 +16,7 @@ public class TokenSetUp {
                 .setSubject(username)
                 .signWith(SECRET_KEY)
                 .setIssuedAt(new Date())
-                .setExpiration(new Date(System.currentTimeMillis() + 3600000)) // 1 hour
+                .setExpiration(new Date(System.currentTimeMillis() + 86400000)) // 1 day
                 .compact();
 
         token = newToken;

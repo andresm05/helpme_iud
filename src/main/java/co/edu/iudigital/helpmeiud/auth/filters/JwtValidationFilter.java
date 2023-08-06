@@ -27,6 +27,7 @@ import jakarta.servlet.http.HttpServletResponse;
 
 public class JwtValidationFilter extends BasicAuthenticationFilter {
 
+
     public JwtValidationFilter(AuthenticationManager authenticationManager) {
         super(authenticationManager);
 
@@ -69,4 +70,5 @@ public class JwtValidationFilter extends BasicAuthenticationFilter {
             response.setContentType("application/json");
         }
     }
+
 }

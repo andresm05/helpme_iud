@@ -15,6 +15,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
@@ -31,16 +32,21 @@ import jakarta.validation.Valid;
 @RequestMapping("/users")
 public class ConsumerController {
 
+
     @Autowired
     private IConsumerService consumerService;
 
     @GetMapping
     public ResponseEntity<List<ConsumerDtoResponse>> getAll(
+            @RequestHeader("Authorization") String token,
             @RequestParam(defaultValue = "0") Integer page,
             @RequestParam(defaultValue = "3") Integer size) {
 
         // this is for pagination
         Pageable pagin = PageRequest.of(page, size);
+
+        token = token.replace("Bearer ", "");
+        System.out.println("token: " + token);
 
         List<ConsumerDtoResponse> consumersDtoResponse = consumerService.findAll(pagin);
 
@@ -107,5 +113,12 @@ public class ConsumerController {
         // return status 204
         return ResponseEntity.noContent().build();
     }
+
+@GetMapping("/renew")
+//renew token
+public ResponseEntity<?> renewToken(@RequestHeader("Authorization") String token) throws RestException {
+    String renew = consumerService.renewToken(token);
+    return ResponseEntity.ok().body(renew);
+}
 
 }
